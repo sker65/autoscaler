@@ -34,6 +34,15 @@ spec:
           type: object
           required: []
           properties:
+            selector:
+              type: object
+              required:
+                - matchLabels
+              properties:
+                matchLabels:
+                  additionalProperties:
+                    type: string
+                  type: object
             targetRef:
               type: object
             updatePolicy:

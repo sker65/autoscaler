@@ -103,6 +103,10 @@ type VerticalPodAutoscalerSpec struct {
 	// recommendation) or contain exactly one recommender.
 	// +optional
 	Recommenders []*VerticalPodAutoscalerRecommenderSelector `json:"recommenders,omitempty" protobuf:"bytes,4,opt,name=recommenders"`
+	// A label query that determines the set of pods controlled by the Autoscaler.
+	// More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors
+	Selector *metav1.LabelSelector `json:"selector" protobuf:"bytes,5,name=selector"`
+
 }
 
 // PodUpdatePolicy describes the rules on how changes are applied to the pods.

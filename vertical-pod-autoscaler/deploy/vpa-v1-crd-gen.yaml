@@ -347,6 +347,24 @@ spec:
                       type: object
                     type: array
                 type: object
+              selector:
+                type: object
+                required:
+                  - matchLabels
+                properties:
+                  matchLabels:
+                    additionalProperties:
+                      type: string
+                    description: matchLabels is a map
+                      of {key,value} pairs. A single
+                      {key,value} in the matchLabels
+                      map is equivalent to an element
+                      of matchExpressions, whose key
+                      field is "key", the operator is
+                      "In", and the values array contains
+                      only "value". The requirements
+                      are ANDed.
+                    type: object
               targetRef:
                 description: TargetRef points to the controller managing the set of
                   pods for the autoscaler to control - e.g. Deployment, StatefulSet.
@@ -396,8 +414,7 @@ spec:
                     - Auto
                     type: string
                 type: object
-            required:
-            - targetRef
+            required: []
             type: object
           status:
             description: Current information about the autoscaler.
