@@ -406,7 +406,7 @@ func (cluster *ClusterState) getContributiveAggregateStateKeys(controllerFetcher
 		// Pod is considered contributive in any of following situations:
 		// 1) It is in active state - i.e. not PodSucceeded nor PodFailed.
 		// 2) Its associated controller (e.g. Deployment) still exists.
-		podControllerExists := cluster.GetControllerForPodUnderVPA(pod, controllerFetcher) != nil
+		podControllerExists := cluster.GetControllerForPodUnderVPA(pod, controllerFetcher)
 		podActive := pod.Phase != apiv1.PodSucceeded && pod.Phase != apiv1.PodFailed
 		if podActive || podControllerExists {
 			for container := range pod.Containers {
@@ -451,21 +451,25 @@ func (cluster *ClusterState) GetMatchingPods(vpa *Vpa) []PodID {
 }
 
 // GetControllerForPodUnderVPA returns controller associated with given Pod. Returns nil if Pod is not controlled by a VPA object.
-func (cluster *ClusterState) GetControllerForPodUnderVPA(pod *PodState, controllerFetcher controllerfetcher.ControllerFetcher) *controllerfetcher.ControllerKeyWithAPIVersion {
+func (cluster *ClusterState) GetControllerForPodUnderVPA(pod *PodState, controllerFetcher controllerfetcher.ControllerFetcher) bool {
 	controllingVPA := cluster.GetControllingVPA(pod)
 	if controllingVPA != nil {
-		controller := &controllerfetcher.ControllerKeyWithAPIVersion{
-			ControllerKey: controllerfetcher.ControllerKey{
-				Namespace: controllingVPA.ID.Namespace,
-				Kind:      controllingVPA.TargetRef.Kind,
-				Name:      controllingVPA.TargetRef.Name,
-			},
-			ApiVersion: controllingVPA.TargetRef.APIVersion,
-		}
+		if controllingVPA.PodSelector != nil {
+			return true
+		} /*else {
+			controller := &controllerfetcher.ControllerKeyWithAPIVersion{
+				ControllerKey: controllerfetcher.ControllerKey{
+					Namespace: controllingVPA.ID.Namespace,
+					Kind:      controllingVPA.TargetRef.Kind,
+					Name:      controllingVPA.TargetRef.Name,
+				},
+				ApiVersion: controllingVPA.TargetRef.APIVersion,
+			}
+	  }
 		topLevelController, _ := controllerFetcher.FindTopMostWellKnownOrScalable(controller)
-		return topLevelController
+		return topLevelController*/
 	}
-	return nil
+	return false
 }
 
 // GetControllingVPA returns a VPA object controlling given Pod.
