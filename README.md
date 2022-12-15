@@ -4,6 +4,12 @@
 
 This repository contains autoscaling-related components for Kubernetes.
 
+# Changes of this fork
+This fork re-introduces the possiblity to specify the pod for vpa recommendation by a pod selector (currently via matchLables) instead of using a targetRef.
+Both possibilities exist as alternative, so it is backwards compatible, but does no longer depend on a controller for the pod or scale subresource.
+
+So far I modified only the recommender (work in progress).
+
 ## What's inside
 
 [Cluster Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) - a component that automatically adjusts the size of a Kubernetes
