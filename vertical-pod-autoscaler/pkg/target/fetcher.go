@@ -117,14 +117,29 @@ type vpaTargetSelectorFetcher struct {
 }
 
 func (f *vpaTargetSelectorFetcher) Fetch(vpa *vpa_types.VerticalPodAutoscaler) (labels.Selector, error) {
-	if vpa.Spec.TargetRef == nil {
-		return nil, fmt.Errorf("targetRef not defined. If this is a v1beta1 object switch to v1beta2.")
+	if vpa.Spec.TargetRef == nil && vpa.Spec.Selector == nil {
+		return nil, fmt.Errorf("Neither targetRef, nor Selector defined. If this is a v1beta1 object switch to v1beta2.")
 	}
+	if vpa.Spec.Selector != nil {
+		klog.Infof("vpa selector set, using selector directly for pods")
+		if vpa.Spec.Selector.MatchLabels != nil {
+			klog.Infof( "vpa spec matchLabels size = %d", len(vpa.Spec.Selector.MatchLabels))
+			for key, element := range vpa.Spec.Selector.MatchLabels {
+				klog.Infof( "vpa spec matches %s = %s", key, element)
+			}
+		} else {
+			klog.Infof("vpa selector match labels not set")
+		} 
+		return metav1.LabelSelectorAsSelector(vpa.Spec.Selector)
+	} 
 	kind := wellKnownController(vpa.Spec.TargetRef.Kind)
 	informer, exists := f.informersMap[kind]
 	if exists {
+		klog.Infof("wellknown controller found in targetRef, using controller selector for pods")
 		return getLabelSelector(informer, vpa.Spec.TargetRef.Kind, vpa.Namespace, vpa.Spec.TargetRef.Name)
 	}
+
+	klog.Infof("no wellknown controller found in targetRef, looking for scale subresource")
 
 	// not on a list of known controllers, use scale sub-resource
 	// TODO: cache response
@@ -139,6 +154,7 @@ func (f *vpaTargetSelectorFetcher) Fetch(vpa *vpa_types.VerticalPodAutoscaler) (
 
 	selector, err := f.getLabelSelectorFromResource(groupKind, vpa.Namespace, vpa.Spec.TargetRef.Name)
 	if err != nil {
+		klog.Infof("no scale subresource found, targetRef invalid")
 		return nil, fmt.Errorf("Unhandled targetRef %s / %s / %s, last error %v",
 			vpa.Spec.TargetRef.APIVersion, vpa.Spec.TargetRef.Kind, vpa.Spec.TargetRef.Name, err)
 	}
@@ -169,7 +185,7 @@ func getLabelSelector(informer cache.SharedIndexInformer, kind, namespace, name 
 	case (*corev1.ReplicationController):
 		return metav1.LabelSelectorAsSelector(metav1.SetAsLabelSelector(apiObj.Spec.Selector))
 	}
-	return nil, fmt.Errorf("don't know how to read label seletor")
+	return nil, fmt.Errorf("don't know how to read label selector")
 }
 
 func (f *vpaTargetSelectorFetcher) getLabelSelectorFromResource(
