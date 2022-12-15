@@ -553,13 +553,22 @@ func (feeder *clusterStateFeeder) validateTargetRef(vpa *vpa_types.VerticalPodAu
 func (feeder *clusterStateFeeder) getSelector(vpa *vpa_types.VerticalPodAutoscaler) (labels.Selector, []condition) {
 	selector, fetchErr := feeder.selectorFetcher.Fetch(vpa)
 	if selector != nil {
+		if vpa.Spec.Selector.MatchLabels != nil {
+			klog.Info("Selector set, dont validate targetRef")
+			return selector, []condition{
+				{conditionType: vpa_types.ConfigUnsupported, delete: true},
+				{conditionType: vpa_types.ConfigDeprecated, delete: true},
+			}
+		}
 		validTargetRef, unsupportedCondition := feeder.validateTargetRef(vpa)
-		if !validTargetRef {
+		if !validTargetRef  {
+			klog.Info("targetRef is invalid, return empty label selector (select nothing)")
 			return labels.Nothing(), []condition{
 				unsupportedCondition,
 				{conditionType: vpa_types.ConfigDeprecated, delete: true},
 			}
 		}
+		klog.Info("targetRef is VALID, return selector from targetRef")
 		return selector, []condition{
 			{conditionType: vpa_types.ConfigUnsupported, delete: true},
 			{conditionType: vpa_types.ConfigDeprecated, delete: true},
