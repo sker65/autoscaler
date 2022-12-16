@@ -130,9 +130,7 @@ func GetControllingVPAForPod(pod *core.Pod, vpas []*VpaWithSelector) *VpaWithSel
 	var controllingVpa *vpa_types.VerticalPodAutoscaler
 	// Choose the strongest VPA from the ones that match this Pod.
 	for _, vpaWithSelector := range vpas {
-		klog.Infof( "vpa spec matches %s = %s ??", controlling.Vpa.GetName(), pod.GetName())
 		if PodMatchesVPA(pod, vpaWithSelector) && stronger(vpaWithSelector.Vpa, controllingVpa) {
-			klog.Infof( "MATCHES %s = %s !!", controlling.Vpa.GetName(), pod.GetName())
 			controlling = vpaWithSelector
 			controllingVpa = controlling.Vpa
 		}
