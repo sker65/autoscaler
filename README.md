@@ -8,7 +8,20 @@ This repository contains autoscaling-related components for Kubernetes.
 This fork re-introduces the possiblity to specify the pod for vpa recommendation by a pod selector (currently via matchLables) instead of using a targetRef.
 Both possibilities exist as alternative, so it is backwards compatible, but does no longer depend on a controller for the pod or scale subresource.
 
-So far I modified only the recommender (work in progress).
+So far I modified only the recommender and the admission controller. Also there is a new object in the vps CRD like:
+````
+apiVersion: "autoscaling.k8s.io/v1"
+kind: VerticalPodAutoscaler
+metadata:
+ name: foo-vpa
+spec:
+ selector:
+   matchLabels:
+     app: foo
+ resourcePolicy:
+   …
+````
+The new element "selector" can be used as an alternative to targerRef for specifing the pods to monitor.
 
 ## What's inside
 
